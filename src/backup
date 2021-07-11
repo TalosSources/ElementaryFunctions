@@ -1,0 +1,102 @@
+        /*RealFunction polynom = new Sum(
+                new Product(new Constant(2), new Power(new Identity(), 2)), // 2x^2
+                new Identity() //x
+        );
+        RealFunction tangeant = new Product(new Sine(new Identity()),
+                new Power(new Cosine(new Identity()), -1));
+        RealFunction bordel = new Power(
+                new Sum(
+                        new Product(new Constant(2), new Power(new Identity(), 4)),
+                        new Exponential(new Product(new Constant(-1),
+                                new Sum(new Product(new Constant(4), new Identity()), new Constant(3))))),
+                0.6d);
+        RealFunction logsin = new Logarithm(new Sine(Functions.ID));*/
+
+
+
+/*class Exponential implements RealFunction {
+    @Override
+    public double y(double x) {
+        return Math.exp(f.y(x));
+    }
+
+    @Override
+    public RealFunction derivative() {
+        return new Product(f.derivative(), this);
+    }
+
+    @Override
+    public String text() {
+        return "exp(" + f.text() + ")";
+    }
+}
+
+class Logarithm implements RealFunction {
+    private final RealFunction f;
+
+    Logarithm(RealFunction f) {
+        this.f = f;
+    }
+
+    @Override
+    public double y(double x) {
+        return Math.log(f.y(x));
+    }
+
+    @Override
+    public RealFunction derivative() {
+        return new Product(f.derivative(), new Power(f, -1));
+    }
+
+    @Override
+    public String text() {
+        return "log(" + f.text() + ")";
+    }
+}
+
+class Sine implements RealFunction {
+    private final RealFunction f;
+
+    Sine(RealFunction f) {
+        this.f = f;
+    }
+
+    @Override
+    public double y(double x) {
+        return Math.sin(f.y(x));
+    }
+
+    @Override
+    public RealFunction derivative() {
+        return new Product(f.derivative(), new Cosine(f));
+    }
+
+    @Override
+    public String text() {
+        return "sin(" + f.text() + ")";
+    }
+}
+
+class Cosine implements RealFunction {
+    private final RealFunction f;
+
+    Cosine(RealFunction f) {
+        this.f = f;
+    }
+
+    @Override
+    public double y(double x) {
+        return Math.cos(f.y(x));
+    }
+
+    @Override
+    public RealFunction derivative() {
+        return new Product( f.derivative(),
+                new Product(new Constant(-1), new Sine(f)));
+    }
+
+    @Override
+    public String text() {
+        return "cos(" + f.text() + ")";
+    }
+}*/

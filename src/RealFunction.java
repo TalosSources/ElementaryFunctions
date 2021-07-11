@@ -1,7 +1,13 @@
+import java.text.DecimalFormat;
+
 public interface RealFunction {
     double y(double x);
     RealFunction derivative();
     String text();
+
+    default RealFunction optimised(){
+        return this;
+    }
 
     default RealFunction comp(RealFunction that){
         return new Composition(this, that);
@@ -21,6 +27,8 @@ public interface RealFunction {
 }
 
 class Functions {
+    public final static DecimalFormat DF = new DecimalFormat("#.####");
+
     public final static RealFunction ZERO = new Constant(0);
     public final static RealFunction ONE = new Constant(1);
     public final static RealFunction MINUS = new Constant(-1);
@@ -34,7 +42,7 @@ class Functions {
 
     public final static RealFunction LOG = new RealFunction() {
         public double y(double x) { return Math.log(x); }
-        public RealFunction derivative() { return ID.power(-1); }
+        public RealFunction derivative() { return new Power(-1); }
         public String text() { return "log"; }
     };
 
@@ -45,7 +53,7 @@ class Functions {
     };
 
     public final static RealFunction COSINE = new RealFunction() {
-        public double y(double x) { return Math.sin(x); }
+        public double y(double x) { return Math.cos(x); }
         public RealFunction derivative() { return minus(SINE); }
         public String text() { return "cos"; }
     };
@@ -76,6 +84,11 @@ class Composition implements RealFunction {
     }
 
     @Override
+    public RealFunction optimised() {
+        return f.optimised().comp(g.optimised());
+    }
+
+    @Override
     public String text() {
         return f.text() + "(" + g.text() + ")";
     }
@@ -98,8 +111,19 @@ class Constant implements RealFunction{
     }
 
     @Override
+    public RealFunction optimised() {
+        if(c - Math.rint(c) != 0) return this;
+        switch((int)c) {
+            case 1 : return Functions.ONE;
+            case 0 : return Functions.ZERO;
+            case -1 : return Functions.MINUS;
+            default : return this;
+        }
+    }
+
+    @Override
     public String text() {
-        return Double.toString(c);
+        return Functions.DF.format(c);
     }
 }
 
@@ -112,6 +136,11 @@ class Identity implements RealFunction {
     @Override
     public RealFunction derivative() {
         return Functions.ONE;
+    }
+
+    @Override
+    public RealFunction optimised() {
+        return this;
     }
 
     @Override
@@ -138,9 +167,15 @@ class Power implements RealFunction {
     }
 
     @Override
+    public RealFunction optimised() {
+        if(e == 1) return Functions.ID;
+        if(e == 0) return Functions.ONE;
+        return this;
+    }
+
+    @Override
     public String text() {
-       /* if(e == 1) return f.text();
-        return "(" + f.text() + ")" + "^" + e;*/
+        if (e == 1) return "";
         return "pow[" + e + "]";
     }
 }
@@ -168,8 +203,31 @@ class Product implements RealFunction {
     }
 
     @Override
+    public RealFunction optimised() {
+        RealFunction fo = f.optimised();
+        RealFunction go = g.optimised();
+
+        if(fo.equals(Functions.ZERO) || go.equals(Functions.ZERO)) return Functions.ZERO;
+        if(fo.equals(Functions.ONE)) return go;
+        if(go.equals(Functions.ONE)) return fo;
+
+        if(f instanceof Constant && g instanceof Constant)
+            return new Constant(f.y(0) * g.y(0));
+
+        return this;
+    }
+
+    @Override
     public String text() {
-        return isZero? Functions.ZERO.text() : f.text() + "*" + g.text();
+        if(f.equals(Functions.ONE))
+            return g.text();
+        if(g.equals(Functions.ONE))
+            return f.text();
+        if(f.equals(Functions.MINUS))
+            return "-" + g.text();
+        if(g.equals(Functions.MINUS))
+            return "-" + f.text();
+        return isZero ? Functions.ZERO.text() : f.text() + " * " + g.text();
     }
 }
 
@@ -192,121 +250,41 @@ class Sum implements RealFunction {
     }
 
     @Override
+    public RealFunction optimised() {
+        RealFunction fo = f.optimised();
+        RealFunction go = g.optimised();
+
+        if(fo instanceof Constant && go instanceof Constant)
+            return new Constant(fo.y(0) + go.y(0));
+
+        if(fo.equals(Functions.ZERO)) return go;
+        if(go.equals(Functions.ZERO)) return fo;
+
+        return this;
+    }
+
+    @Override
     public String text() {
-        return f.text() + " + " + g.text();
+        return f.text() + "  +  " + g.text();
     }
 }
-
-/*class Exponential implements RealFunction {
-    @Override
-    public double y(double x) {
-        return Math.exp(f.y(x));
-    }
-
-    @Override
-    public RealFunction derivative() {
-        return new Product(f.derivative(), this);
-    }
-
-    @Override
-    public String text() {
-        return "exp(" + f.text() + ")";
-    }
-}
-
-class Logarithm implements RealFunction {
-    private final RealFunction f;
-
-    Logarithm(RealFunction f) {
-        this.f = f;
-    }
-
-    @Override
-    public double y(double x) {
-        return Math.log(f.y(x));
-    }
-
-    @Override
-    public RealFunction derivative() {
-        return new Product(f.derivative(), new Power(f, -1));
-    }
-
-    @Override
-    public String text() {
-        return "log(" + f.text() + ")";
-    }
-}
-
-class Sine implements RealFunction {
-    private final RealFunction f;
-
-    Sine(RealFunction f) {
-        this.f = f;
-    }
-
-    @Override
-    public double y(double x) {
-        return Math.sin(f.y(x));
-    }
-
-    @Override
-    public RealFunction derivative() {
-        return new Product(f.derivative(), new Cosine(f));
-    }
-
-    @Override
-    public String text() {
-        return "sin(" + f.text() + ")";
-    }
-}
-
-class Cosine implements RealFunction {
-    private final RealFunction f;
-
-    Cosine(RealFunction f) {
-        this.f = f;
-    }
-
-    @Override
-    public double y(double x) {
-        return Math.cos(f.y(x));
-    }
-
-    @Override
-    public RealFunction derivative() {
-        return new Product( f.derivative(),
-                new Product(new Constant(-1), new Sine(f)));
-    }
-
-    @Override
-    public String text() {
-        return "cos(" + f.text() + ")";
-    }
-}*/
 
 class Main {
     public static void main(String[] args){
-        /*RealFunction polynom = new Sum(
-                new Product(new Constant(2), new Power(new Identity(), 2)), // 2x^2
-                new Identity() //x
-        );
-        RealFunction tangeant = new Product(new Sine(new Identity()),
-                new Power(new Cosine(new Identity()), -1));
-        RealFunction bordel = new Power(
-                new Sum(
-                        new Product(new Constant(2), new Power(new Identity(), 4)),
-                        new Exponential(new Product(new Constant(-1),
-                                new Sum(new Product(new Constant(4), new Identity()), new Constant(3))))),
-                0.6d);
-        RealFunction logsin = new Logarithm(new Sine(Functions.ID));*/
-
         RealFunction deuxPointZero = Functions.ID.power(3).sum(Functions.LOG.comp(Functions.SINE.comp(Functions.ID)));
         RealFunction test = Functions.SINE.comp(Functions.COSINE.comp(Functions.LOG.comp(Functions.ID)));
+        RealFunction tangeant = (Functions.COSINE.power(-1).product(Functions.SINE));
+        RealFunction three = Functions.SINE.comp(Functions.ID).power(2)
+                            .product(Functions.COSINE.comp(Functions.ID.power(2)));
 
-        RealFunction function = test;
-        System.out.println(function.text());
-        RealFunction derivative = function.derivative(); //should be 4x + 1
-        System.out.println(derivative.text());
-        for(int i = 0; i < 10; ++i) System.out.println(derivative.y(i) +", ");
+        RealFunction function = tangeant;
+        for(int i = 0; i < 4; ++i){
+            System.out.println(function.text());
+            function = function.derivative().optimised();
+        }
+//        System.out.println(function.text());
+//        RealFunction derivative = function.derivative(); //should be 4x + 1
+//        System.out.println(derivative.text());
+//        for(int i = 0; i < 10; ++i) System.out.println(derivative.y(i) +", ");
     }
 }

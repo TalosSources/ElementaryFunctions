@@ -214,7 +214,7 @@ class Product implements RealFunction {
         if(f instanceof Constant && g instanceof Constant)
             return new Constant(f.y(0) * g.y(0));
 
-        return this;
+        return fo.product(go);
     }
 
     @Override
@@ -260,7 +260,7 @@ class Sum implements RealFunction {
         if(fo.equals(Functions.ZERO)) return go;
         if(go.equals(Functions.ZERO)) return fo;
 
-        return this;
+        return fo.sum(go);
     }
 
     @Override
@@ -274,17 +274,33 @@ class Main {
         RealFunction deuxPointZero = Functions.ID.power(3).sum(Functions.LOG.comp(Functions.SINE.comp(Functions.ID)));
         RealFunction test = Functions.SINE.comp(Functions.COSINE.comp(Functions.LOG.comp(Functions.ID)));
         RealFunction tangeant = (Functions.COSINE.power(-1).product(Functions.SINE));
-        RealFunction three = Functions.SINE.comp(Functions.ID).power(2)
+        RealFunction three = Functions.SINE.power(2)
                             .product(Functions.COSINE.comp(Functions.ID.power(2)));
 
-        RealFunction function = tangeant;
-        for(int i = 0; i < 4; ++i){
-            System.out.println(function.text());
-            function = function.derivative().optimised();
+        RealFunction function = three;
+        System.out.println("Function : " + function.text());
+        for(int i = 0; i < 2; ++i){
+            function = function.derivative();
         }
+        System.out.println("4th derivative : " + function.text());
+        function = function.optimised();
+        System.out.println("optimised : " + function.text());
 //        System.out.println(function.text());
 //        RealFunction derivative = function.derivative(); //should be 4x + 1
 //        System.out.println(derivative.text());
 //        for(int i = 0; i < 10; ++i) System.out.println(derivative.y(i) +", ");
+    }
+}
+
+class Notes {
+    public static void main(String[] args){
+        int points = 438;
+        System.out.println("Note : " + grade(points) + " / 6");
+    }
+
+    static double grade(int points) {
+        double rawGrade = 0.875 + 5.25 * (points / 500d);
+        System.out.println(rawGrade);
+        return Math.rint(rawGrade * 4) / 4;
     }
 }
